@@ -1,0 +1,51 @@
+#Board games dataset for March 12 #TidyTuesday
+#Let's look at game rating by year published, colored by category, calling out my favourites
+library(tidyverse)
+library(ggrepel)
+
+#Read in data
+board_games <- readr::read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2019/2019-03-12/board_games.csv")
+
+#Identify favourite games
+df <- board_games %>% 
+  mutate(favs = case_when(
+    name == "Monopoly Deal" | name == "Munchkin" | name == "Betrayal at House on the Hill" |
+      name == "Tokaido" | name == "Sushi Go!" | name == "Xia: Legends of a Drift System" |
+      name == "Pandemic Legacy: Season 1" | name == "Dutch Blitz" ~ 1))
+
+#Sort by number of ratings (Couldn't figure out how to add this to the pipe...)
+df <- arrange(df,desc(users_rated)) %>% 
+  mutate(usernum = row_number())
+
+#Plot
+p1 <- df %>% 
+  ggplot(aes(x=year_published, y=average_rating,color=usernum))+
+  geom_jitter(size=3)+
+  geom_label_repel(data = filter(df, favs == 1), aes(label = name),
+                   nudge_x = 2030,
+                   direction = "y",
+                   hjust = 0)+
+  xlim(1950,2030)+
+  ylim(0, 10)+
+  labs(title="Board Game Rankings", subtitle="Ranking by year with favourite callouts",x="Year Published",y="Average Rating (/10)") +
+  theme(legend.title = element_text(size=rel(1)),
+        legend.key = element_rect(fill=NA),
+        panel.background = element_blank(),
+        axis.title = element_text(size = rel(1)),
+        axis.title.y = element_text(angle=90,vjust=2,size=rel(2)),
+        axis.title.x = element_text(vjust = -0.2,size=rel(2)),
+        axis.text = element_text(),
+        axis.line = element_line(colour="black"),
+        axis.ticks = element_line(),
+        panel.grid.major = element_line(colour="#f0f0f0"),
+        panel.grid.minor = element_blank(),
+        legend.position = "right",
+        legend.direction = "vertical",
+        legend.key.size = unit(0.5,"cm"),
+        legend.text=element_text(size=10),
+        legend.spacing.x = unit(0.1,'cm'),
+        plot.margin = unit(c(10,5,5,5),"mm"),
+        plot.title = element_text(face="bold",size=rel(3),hjust=0.5),
+        plot.subtitle = element_text(face="bold",size=rel(2),hjust=0.5))+
+  scale_color_gradientn(colours=rainbow(5),name = "Ranking Weight")
+p1
