@@ -1,0 +1,33 @@
+#Traffic Stops dataset for #TidyTuesday March 19
+library(tidyverse)
+library(usmap)
+
+#Bring in data
+combined_data <- readr::read_csv("https://raw.githubusercontent.com/5harad/openpolicing/master/results/data_for_figures/combined_data.csv")
+combined_data$driver_race <- as.factor(combined_data$driver_race)
+
+#Index state abbreviation for a fips number
+index <- match(combined_data$state,statepop$abbr)
+
+#Adjust data to add fips column, cap stop_rates at 2 and drop NA values
+df1 <- combined_data %>% 
+  mutate(fips=statepop$fips[index]) %>% 
+  mutate(stop_rate = ifelse(stop_rate > 2, 2, stop_rate)) %>% 
+  drop_na(stop_rate)
+
+#Index states to plot on map
+index2 <- match(df1$state,statepop$abbr)
+index3 <- statepop$abbr[index2]
+
+#Plot states with available data on a US Map with facets for race
+p1 <- plot_usmap(regions = "states", 
+                 include = index3,
+                 data = df1,
+                 values = "stop_rate") +
+  scale_fill_continuous(low = "white", high = "red",
+                        name = "Stop Rate (%)",
+                        limits = c(0,2)) +
+  theme(legend.position = "right",
+        strip.text = element_text(size=20)) +
+  facet_wrap(~driver_race)
+p1
