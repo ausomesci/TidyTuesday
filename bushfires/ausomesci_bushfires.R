@@ -1,5 +1,5 @@
 ## Tidy Tuesday January 7th, 2020
-# Autralian bush fires
+# Australian bush fires
 
 library(tidyverse)
 library(lubridate)
